@@ -1,0 +1,309 @@
+{
+  "conversation_config": {
+    "agent": {
+      "prompt": {
+        "tools": [
+          {
+            "type": "webhook",
+            "name": "check_availibility",
+            "description": "Vérifie les disponibilités dans Google Calendar et retourne les créneaux libres en heure Paris. Appeler dès que le prospect mentionne une date ou demande des disponibilités.",
+            "response_timeout_secs": 20,
+            "disable_interruptions": false,
+            "execution_mode": "immediate",
+            "api_schema": {
+              "url": "https://n8n.srv1011354.hstgr.cloud/webhook/6f4e1c71-3dcd-4659-b2cd-26c49916fea0",
+              "method": "POST",
+              "content_type": "application/json",
+              "request_headers": {},
+              "path_params_schema": {},
+              "query_params_schema": null,
+              "request_body_schema": {
+                "type": "object",
+                "required": ["action", "date", "session_id"],
+                "description": "Vérifie les créneaux disponibles pour une date donnée.",
+                "properties": {
+                  "action": {
+                    "type": "string",
+                    "description": "Valeur fixe à envoyer : check_availability",
+                    "constant_value": "check_availability",
+                    "is_system_provided": false,
+                    "is_omitted": false
+                  },
+                  "date": {
+                    "type": "string",
+                    "description": "Date souhaitée pour le rendez-vous au format YYYY-MM-DD, fuseau Europe/Paris. Exemple : 2026-11-05. Extraire de la conversation quand le prospect mentionne une date.",
+                    "is_system_provided": false,
+                    "is_omitted": false
+                  },
+                  "session_id": {
+                    "type": "string",
+                    "description": "ID de session ElevenLabs pour la mémoire n8n",
+                    "is_system_provided": false,
+                    "is_omitted": false
+                  }
+                }
+              },
+              "response_body_schema": {
+                "type": "object",
+                "description": "Réponse contenant les créneaux disponibles",
+                "properties": {
+                  "available_slots": {
+                    "type": "array",
+                    "description": "Liste des créneaux disponibles au format HH:MM",
+                    "items": { "type": "string" }
+                  },
+                  "date": {
+                    "type": "string",
+                    "description": "Date vérifiée au format YYYY-MM-DD"
+                  },
+                  "message": {
+                    "type": "string",
+                    "description": "Message informatif en cas d'absence de disponibilités"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "webhook",
+            "name": "create_appointment",
+            "description": "Crée un événement dans Google Calendar après confirmation explicite du prospect. N'appeler qu'une seule fois par conversation, uniquement quand le prospect a confirmé le créneau.",
+            "response_timeout_secs": 20,
+            "disable_interruptions": false,
+            "execution_mode": "immediate",
+            "api_schema": {
+              "url": "https://n8n.srv1011354.hstgr.cloud/webhook/6f4e1c71-3dcd-4659-b2cd-26c49916fea0",
+              "method": "POST",
+              "content_type": "application/json",
+              "request_headers": {},
+              "path_params_schema": {},
+              "query_params_schema": null,
+              "request_body_schema": {
+                "type": "object",
+                "required": ["action", "date", "time", "duration_minutes", "client_email", "client_name", "title", "session_id"],
+                "description": "Crée un rendez-vous dans Google Calendar avec invitation envoyée au prospect.",
+                "properties": {
+                  "action": {
+                    "type": "string",
+                    "description": "Valeur fixe à envoyer : create_appointment",
+                    "constant_value": "create_appointment",
+                    "is_system_provided": false,
+                    "is_omitted": false
+                  },
+                  "date": {
+                    "type": "string",
+                    "description": "Date du rendez-vous au format YYYY-MM-DD, fuseau Europe/Paris. Exemple : 2026-11-05",
+                    "is_system_provided": false,
+                    "is_omitted": false
+                  },
+                  "time": {
+                    "type": "string",
+                    "description": "Heure du rendez-vous au format HH:MM, fuseau Europe/Paris. Exemple : 14:30",
+                    "is_system_provided": false,
+                    "is_omitted": false
+                  },
+                  "duration_minutes": {
+                    "type": "integer",
+                    "description": "Durée du rendez-vous en minutes. Défaut : 30",
+                    "is_system_provided": false,
+                    "is_omitted": false
+                  },
+                  "client_email": {
+                    "type": "string",
+                    "description": "Email du prospect pour l'invitation Google Calendar",
+                    "is_system_provided": false,
+                    "is_omitted": false
+                  },
+                  "client_name": {
+                    "type": "string",
+                    "description": "Nom complet du prospect",
+                    "is_system_provided": false,
+                    "is_omitted": false
+                  },
+                  "client_phone": {
+                    "type": "string",
+                    "description": "Numéro de téléphone du prospect",
+                    "is_system_provided": false,
+                    "is_omitted": false
+                  },
+                  "title": {
+                    "type": "string",
+                    "description": "Titre de l'événement Google Calendar. Exemple : Diagnostic Nexya — Jean Dupont",
+                    "is_system_provided": false,
+                    "is_omitted": false
+                  },
+                  "notes": {
+                    "type": "string",
+                    "description": "Notes ou contexte à ajouter à la description de l'événement",
+                    "is_system_provided": false,
+                    "is_omitted": false
+                  },
+                  "session_id": {
+                    "type": "string",
+                    "description": "ID de session ElevenLabs pour la mémoire n8n",
+                    "is_system_provided": false,
+                    "is_omitted": false
+                  }
+                }
+              },
+              "response_body_schema": {
+                "type": "object",
+                "description": "Confirmation de la création du rendez-vous",
+                "properties": {
+                  "success": {
+                    "type": "boolean",
+                    "description": "true si le rendez-vous a été créé avec succès"
+                  },
+                  "event_id": {
+                    "type": "string",
+                    "description": "Identifiant Google Calendar de l'événement créé"
+                  },
+                  "event_link": {
+                    "type": "string",
+                    "description": "Lien Google Calendar vers l'événement"
+                  },
+                  "message": {
+                    "type": "string",
+                    "description": "Message de confirmation ou d'erreur"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "webhook",
+            "name": "save_prospect",
+            "description": "Enregistre les informations du prospect dans Airtable CRM. N'appeler qu'une seule fois par conversation, quand suffisamment d'informations ont été collectées naturellement. Ne jamais forcer la collecte en rafale.",
+            "response_timeout_secs": 20,
+            "disable_interruptions": false,
+            "execution_mode": "immediate",
+            "api_schema": {
+              "url": "https://n8n.srv1011354.hstgr.cloud/webhook/6f4e1c71-3dcd-4659-b2cd-26c49916fea0",
+              "method": "POST",
+              "content_type": "application/json",
+              "request_headers": {},
+              "path_params_schema": {},
+              "query_params_schema": null,
+              "request_body_schema": {
+                "type": "object",
+                "required": ["action", "client_name", "client_email", "client_phone", "next_action", "notes", "session_id"],
+                "description": "Enregistre les informations du prospect dans Airtable CRM. N'appeler qu'une seule fois par conversation.",
+                "properties": {
+                  "action": {
+                    "type": "string",
+                    "description": "Valeur fixe à envoyer : save_prospect",
+                    "constant_value": "save_prospect",
+                    "is_system_provided": false,
+                    "is_omitted": false
+                  },
+                  "client_name": {
+                    "type": "string",
+                    "description": "Nom complet du prospect",
+                    "is_system_provided": false,
+                    "is_omitted": false
+                  },
+                  "client_email": {
+                    "type": "string",
+                    "description": "Email du prospect",
+                    "is_system_provided": false,
+                    "is_omitted": false
+                  },
+                  "client_phone": {
+                    "type": "string",
+                    "description": "Numéro de téléphone du prospect",
+                    "is_system_provided": false,
+                    "is_omitted": false
+                  },
+                  "company_name": {
+                    "type": "string",
+                    "description": "Nom de l'entreprise du prospect",
+                    "is_system_provided": false,
+                    "is_omitted": false
+                  },
+                  "company_size": {
+                    "type": "string",
+                    "description": "Taille de l'entreprise. Exemple : 1-10, 10-50, 50+",
+                    "is_system_provided": false,
+                    "is_omitted": false
+                  },
+                  "industry": {
+                    "type": "string",
+                    "description": "Secteur d'activité. Exemple : BTP, SaaS, Agence",
+                    "is_system_provided": false,
+                    "is_omitted": false
+                  },
+                  "need_type": {
+                    "type": "string",
+                    "description": "Type de besoin exprimé par le prospect",
+                    "is_system_provided": false,
+                    "is_omitted": false
+                  },
+                  "urgency": {
+                    "type": "string",
+                    "description": "Niveau d'urgence : faible, moyen, élevé",
+                    "is_system_provided": false,
+                    "is_omitted": false
+                  },
+                  "budget_discussed": {
+                    "type": "string",
+                    "description": "Budget évoqué pendant la conversation",
+                    "is_system_provided": false,
+                    "is_omitted": false
+                  },
+                  "objections": {
+                    "type": "string",
+                    "description": "Objections soulevées par le prospect",
+                    "is_system_provided": false,
+                    "is_omitted": false
+                  },
+                  "interest_level": {
+                    "type": "string",
+                    "description": "Niveau d'intérêt : faible, moyen, élevé",
+                    "is_system_provided": false,
+                    "is_omitted": false
+                  },
+                  "next_action": {
+                    "type": "string",
+                    "description": "Prochaine action prévue. Exemple : Envoi devis, Relance J+3",
+                    "is_system_provided": false,
+                    "is_omitted": false
+                  },
+                  "notes": {
+                    "type": "string",
+                    "description": "Notes complémentaires sur la conversation",
+                    "is_system_provided": false,
+                    "is_omitted": false
+                  },
+                  "session_id": {
+                    "type": "string",
+                    "description": "ID de session ElevenLabs pour la mémoire n8n",
+                    "is_system_provided": false,
+                    "is_omitted": false
+                  }
+                }
+              },
+              "response_body_schema": {
+                "type": "object",
+                "description": "Confirmation de l'enregistrement dans Airtable",
+                "properties": {
+                  "success": {
+                    "type": "boolean",
+                    "description": "true si le prospect a été enregistré avec succès"
+                  },
+                  "record_id": {
+                    "type": "string",
+                    "description": "Identifiant Airtable de la fiche prospect créée"
+                  },
+                  "message": {
+                    "type": "string",
+                    "description": "Message de confirmation ou d'erreur"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
